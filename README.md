@@ -1,196 +1,187 @@
-# Nonlinear Least Squares: Newton, Gauss–Newton, and Levenberg–Marquardt  
-### Experimental Study for Damped Oscillation Model
+# Nonlinear Least Squares: Gauss–Newton and Levenberg–Marquardt  
+### A Focused Computational Study Using the Damped Oscillation Model  
+*(AM205 Final Project — Rooted in Heath Chapter 6: Optimization)*
 
-This project investigates the numerical behavior of three classical optimization methods for nonlinear least squares (NLS):
+This project presents a **clean, focused, and computationally substantial** exploration of two classical nonlinear least squares algorithms:
 
-- **Newton’s Method (full Hessian)**
-- **Gauss–Newton (GN)**
-- **Levenberg–Marquardt (LM)**
+- **Gauss–Newton (GN)**  
+- **Levenberg–Marquardt (LM)**  
 
-All experiments follow the formulation in *Heath, Scientific Computing, Ch. 6.6*, and use a **damped oscillation model**
+The study centers on a single realistic model — **damped oscillation** — and investigates **three essential numerical phenomena**:
+
+1. **Sensitivity to initialization**  
+2. **Ill-conditioning of the Gauss–Newton linear subproblem**  
+3. **Effect of measurement noise**
+
+These experiments align directly with *Heath, Scientific Computing, Section 6.6* and emphasize numerical stability, conditioning, and robustness — all core themes of AM205 scientific computing.
+
+---
+
+# 0. Problem Setup
+
+We study parameter estimation for the nonlinear model
 
 $$
-f(t;\theta) = \lambda e^{-\alpha t}\sin(\omega t), \quad 
+f(t;\theta) = \lambda e^{-\alpha t} \sin(\omega t), \quad
 \theta = (\lambda, \alpha, \omega).
 $$
 
-The residuals are
+Given data $y_i$, residuals are
+
 $$
-r_i(\theta) = y_i - f(t_i;\theta)
+r_i(\theta) = y_i - f(t_i;\theta),
 $$
-and the objective is
+
+and the nonlinear least squares objective is
+
 $$
 \phi(\theta) = \tfrac12 \|r(\theta)\|^2.
 $$
 
-We compare Newton, GN, and LM on several aspects of nonlinear least squares:  
-**initialization sensitivity, noise robustness, quality of the GN Hessian approximation, conditioning of the linear LS subproblem, and overall method robustness.**
+Let $J(\theta)$ denote the Jacobian of $r(\theta)$.
 
 ---
 
-## 0. Algorithms Implemented
+# 1. Algorithms Implemented
 
-### Newton Method (full Hessian)
-$$
-\nabla\phi(\theta)=J^T r, \qquad
-H_\phi(\theta)=J^TJ+\sum_{i=1}^m r_i(\theta) H_{r_i}(\theta)
-$$
-$$
-H_\phi(\theta_k)s_k = -\nabla\phi(\theta_k)
-$$
+## Gauss–Newton (GN)
+Approximates the Hessian using $J^T J$:
 
-### Gauss–Newton (GN)
-Drop the second-order term:
 $$
 (J^T J)s_k = -J^T r.
 $$
 
-### Levenberg–Marquardt (LM)
-Add regularization to handle ill-conditioning:
+A classical local method: fast when residuals are small, but sensitive to initialization and conditioning.
+
+---
+
+## Levenberg–Marquardt (LM)
+Adds a damping/regularization term:
+
 $$
 (J^T J + \mu_k I)s_k = -J^T r.
 $$
-$\mu_k$ decreases when the iteration is successful and increases otherwise.
 
-All solvers use identical convergence criteria:  
-gradient tolerance, small step size, and max iterations.
+- If a step succeeds → decrease $\mu_k$ (approach GN)  
+- If a step fails → increase $\mu_k$ (approach gradient descent)
 
----
-
-# **E1 – Sensitivity to Initialization**
-
-### Goal
-Compare how robust Newton, GN, and LM are to different starting points.
-
-### Setup
-- Generate data with moderate noise (e.g., σ = 0.05).  
-- Run 80 random initializations around the true parameters and several **bad initializations**  
-  (wrong sign of λ, doubled frequency ω, etc.).  
-- For each method record:
-  - convergence / divergence  
-  - iterations  
-  - final SSE  
-  - parameter error  
-
-### Outputs
-- Histogram of final SSE for each method  
-- Scatter plot of initial guesses colored by convergence quality  
-- Table summarizing convergence rates
-
-### Expected Behavior
-- **Newton** and **GN** often diverge from bad initializations  
-- **LM** has the largest basin of attraction and strongest robustness  
-- Confirms textbook statement: *GN may fail unless started sufficiently close to the solution*
+LM stabilizes GN when the linear subproblem is **ill-conditioned** or when initialization is **poor**, as emphasized in *Heath 6.6.2*.
 
 ---
 
-# **E2 – Sensitivity to Measurement Noise**
+# 2. Experiments
 
-### Goal
-Quantify how noise in the data affects parameter estimation.
+We present **three core experiments**, each illuminating a key numerical property of GN and LM.  
+All figures in the report correspond directly to these sections.
 
-### Setup
-- Fix one initialization.  
-- Noise levels:  
+---
+
+# **E1 — Sensitivity to Initialization (GN vs LM)**
+
+### Goal  
+Demonstrate that GN is highly sensitive to initialization, while LM has a substantially larger **basin of attraction**.
+
+### Setup  
+- Moderate noise ($\sigma = 0.05$)  
+- 40–80 random initializations around the true parameters  
+- Several intentionally bad initializations  
+  (e.g., wrong sign of λ, doubled ω)
+
+For each run record:
+
+- Convergence or divergence  
+- Iterations  
+- Final SSE  
+- Parameter error
+
+### Expected Results  
+- **GN**: many failures unless started close to the true solution  
+- **LM**: consistently convergent; rescuing bad initializations  
+- Matches Heath’s statement:  
+  *“GN may fail unless the initial guess is sufficiently close.”*
+
+### Suggested Plots  
+- Convergence rate bar chart  
+- Scatter: initialization → final SSE  
+- LM vs GN convergence trajectories (for selected runs)
+
+---
+
+# **E2 — Ill-Conditioning of the Gauss–Newton Subproblem**  
+### (Normal Equations vs QR vs LM)
+
+### Goal  
+Study numerical stability when $J$ or $J^T J$ becomes ill-conditioned — a central issue in NLS.
+
+### Setup  
+- Long time horizon (e.g. $t \in [0, 25]$)  
+- Compute conditioning of:
+  - $J$
+  - $J^T J$
+  - $J^T J + \mu I$ (LM)
+
+Compare:
+
+1. **GN using normal equations**  
+2. **GN using QR factorization**  
+3. **LM using normal equations**
+
+### Expected Results  
+- $J^T J$ becomes extremely ill-conditioned  
+- GN(normal eq) exhibits instability or erratic steps  
+- GN(QR) is more stable but still sensitive  
+- **LM dramatically improves stability** by shifting the spectrum and regularizing the system  
+- Confirms *Heath 6.6.2* on LM’s role in “ill-conditioned or rank-deficient least squares problems”
+
+### Suggested Plots  
+- cond(J), cond(J^T J), cond(J^T J+μI) vs iteration  
+- SSE vs iteration  
+- Comparison of step quality
+
+---
+
+# **E3 — Sensitivity to Measurement Noise**
+
+### Goal  
+Quantify how noise affects parameter recovery.
+
+### Setup  
+- Fixed initialization  
+- Noise levels  
   $$
-  \sigma \in \{0.01,0.05,0.10,0.20\}.
+  \sigma \in \{0.01, 0.05, 0.10, 0.20\}
   $$
-- For each σ run 20 trials, compute:
+- For each $\sigma$, run 20 trials and compute:
   - median parameter error  
   - median SSE  
 
-### Outputs
-- Parameter error vs noise (with IQR bars)  
-- SSE vs noise  
+### Expected Results  
+- Parameter error grows approximately linearly with $\sigma$  
+- SSE increases significantly with $\sigma$  
+- Noise affects both GN and LM similarly; this experiment provides completeness and insight into data sensitivity
 
-### Expected Behavior
-- Parameter error increases roughly linearly with noise  
-- SSE grows significantly as σ increases  
-- Noise affects **all methods** similarly; algorithmic differences are not dominant here
-
----
-
-# **E3 – Small vs Large Residual: Validity of the GN Approximation**
-
-### Goal
-Test when the GN approximation  
-$$
-H_\phi \approx J^T J
-$$  
-is accurate, and when the omitted curvature term  
-$$
-\sum_i r_i H_{r_i}
-$$  
-becomes significant.
-
-### Setup
-Two datasets:
-
-1. **Small residual**: model is correct + tiny noise (σ = 0.01)  
-2. **Large residual**: model is slightly mis-specified (e.g., add a phase shift in data generation)
-
-Run Newton, GN, LM from the same good initialization.
-
-### Outputs
-- Convergence curves φ(θ_k)  
-- Bar plot comparing magnitudes of  
-  - $ \|J^TJ\| $  
-  - $ \left\|\sum r_i H_{r_i} \right\| $  
-  at the solution  
-
-### Expected Behavior
-- Small residual: Newton ≈ GN (curvature term negligible)  
-- Large residual: Newton performs differently; GN slows or fails  
-- LM remains stable but may not match Newton accuracy  
+### Suggested Plots  
+- Parameter error vs $\sigma$  
+- SSE vs $\sigma$  
 
 ---
 
-# **E4 – Ill-Conditioned Linear Subproblems & Role of LM**
+# 3. Discussion & Takeaways
 
-### Goal
-Demonstrate why LM is crucial when  
-$$
-J \ \text{or} \ J^T J
-$$
-is ill-conditioned or nearly rank–deficient.
+### Gauss–Newton  
+- Efficient when residuals are small  
+- Very sensitive to initialization  
+- Suffers in ill-conditioning due to $J^T J$
 
-### Setup
-- Long time horizon (e.g., t ∈ [0, 25]) → Jacobian becomes ill-conditioned  
-- Compare:
-  1. GN + Normal Equations (solve $J^T J s = -J^T r$)  
-  2. GN + QR Factorization  
-  3. LM + Normal Equations  
+### Levenberg–Marquardt  
+- More stable across all experiments  
+- Handles bad initializations  
+- Regularizes ill-conditioned subproblems  
+- Provides predictable convergence behavior
 
-### Measurements
-- cond(J) and cond(JᵀJ + μI) per iteration  
-- SSE trajectories  
-- Step quality and convergence rate  
-
-### Expected Behavior
-- cond(JᵀJ) extremely large  
-- GN(normal eq) unstable  
-- GN(QR) more stable but still sensitive  
-- **LM provides the strongest numerical stability**  
-  due to the shift λI improving conditioning  
-
-This directly verifies textbook Section 6.6.2.
-
----
-
-# **E5 – Overall Comparison and Practical Recommendations**
-
-| Scenario | Newton | Gauss–Newton | LM |
-|---------|--------|---------------|----|
-| Good initialization, small residual | ✔ Fast | ✔ Fast | ✔ Slightly slower |
-| Mildly bad initialization | ✖ Often diverges | △ Sometimes converges | ✔ Robust |
-| Ill-conditioned J | ✖ Very unstable | △ Sensitive | ✔ Most stable |
-| Large residual / model mismatch | ✔ Can help | ✖ GN inaccurate | △ Moderately robust |
-| Implementation cost | ✖ High (Hessian) | ✔ Low | ✔ Medium |
-
-### Final Takeaways
-- **GN** is efficient and accurate when residuals are small and conditioning is reasonable.  
-- **Newton** is powerful but unstable and expensive; best used only when very close to the optimum.  
-- **LM** is the most robust overall and handles poor initialization and ill-conditioning gracefully.  
+### Overall  
+**LM offers greater robustness at modest cost**, while GN is fast only under ideal conditions.  
+These findings align cleanly with the theoretical descriptions in *Heath, Ch. 6.6*.
 
 ---
 
@@ -202,9 +193,7 @@ This directly verifies textbook Section 6.6.2.
 ├── scripts/
 │   ├── experiment_init.py
 │   ├── experiment_noise.py
-│   ├── experiment_residuals.py
 │   ├── experiment_conditioning.py
-│   ├── experiment_newton_gn_lm.py
 │   └── utils_solvers.py
 └── plots/
 ```
