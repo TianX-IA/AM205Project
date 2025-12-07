@@ -2,7 +2,7 @@
 ### A Focused Computational Study Using the Damped Oscillation Model  
 *(AM205 Final Project — Rooted in Heath Chapter 6: Optimization)*
 
-This project presents a **clean, focused, and computationally substantial** exploration of two classical nonlinear least squares algorithms:
+This project presents a clean, focused, and computationally substantial exploration of two classical nonlinear least squares algorithms:
 
 ---
 
@@ -62,16 +62,16 @@ python scripts/experiment_noise.py
 
 ---
 
-This project presents a **clean, focused, and computationally substantial** exploration of two classical nonlinear least squares algorithms:
+This project presents a clean, focused, and computationally substantial exploration of two classical nonlinear least squares algorithms:
 
 - **Gauss–Newton (GN)**  
 - **Levenberg–Marquardt (LM)**  
 
-The study centers on a single realistic model — **damped oscillation** — and investigates **three essential numerical phenomena**:
+The study centers on a single realistic model — damped oscillation — and investigates three essential numerical phenomena:
 
-1. **Sensitivity to initialization**  
-2. **Ill-conditioning of the Gauss–Newton linear subproblem**  
-3. **Effect of measurement noise**
+1. Sensitivity to initialization  
+2. Ill-conditioning of the Gauss–Newton linear subproblem  
+3. Effect of measurement noise
 
 These experiments align directly with *Heath, Scientific Computing, Section 6.6* and emphasize numerical stability, conditioning, and robustness — all core themes of AM205 scientific computing.
 
@@ -125,13 +125,13 @@ $$
 - If a step succeeds → decrease $\mu_k$ (approach GN)  
 - If a step fails → increase $\mu_k$ (approach gradient descent)
 
-LM stabilizes GN when the linear subproblem is **ill-conditioned** or when initialization is **poor**, as emphasized in *Heath 6.6.2*.
+LM stabilizes GN when the linear subproblem is ill-conditioned or when initialization is poor, as emphasized in *Heath 6.6.2*.
 
 ---
 
 # 2. Experiments
 
-We present **three core experiments**, each illuminating a key numerical property of GN and LM.  
+We present three core experiments, each illuminating a key numerical property of GN and LM.  
 All figures in the report correspond directly to these sections.
 
 ---
@@ -139,7 +139,7 @@ All figures in the report correspond directly to these sections.
 # **E1 — Sensitivity to Initialization (GN vs LM)**
 
 ### Goal  
-Demonstrate that GN is highly sensitive to initialization, while LM has a substantially larger **basin of attraction**.
+Demonstrate that GN is highly sensitive to initialization, while LM has a substantially larger basin of attraction.
 
 ### Setup  
 - Moderate noise ($\sigma = 0.05$)  
@@ -182,15 +182,15 @@ Study numerical stability when $J$ or $J^T J$ becomes ill-conditioned — a cent
 
 Compare:
 
-1. **GN using normal equations**  
-2. **GN using QR factorization**  
-3. **LM using normal equations**
+1. GN using normal equations  
+2. GN using QR factorization  
+3. LM using normal equations
 
 ### Expected Results  
 - $J^T J$ becomes extremely ill-conditioned  
 - GN(normal eq) exhibits instability or erratic steps  
 - GN(QR) is more stable but still sensitive  
-- **LM dramatically improves stability** by shifting the spectrum and regularizing the system  
+- LM dramatically improves stability by shifting the spectrum and regularizing the system  
 - Confirms *Heath 6.6.2* on LM’s role in “ill-conditioned or rank-deficient least squares problems”
 
 ### Suggested Plots  
@@ -240,7 +240,7 @@ Quantify how noise affects parameter recovery.
 - Provides predictable convergence behavior
 
 ### Overall  
-**LM offers greater robustness at modest cost**, while GN is fast only under ideal conditions.  
+LM offers greater robustness at modest cost, while GN is fast only under ideal conditions.  
 These findings align cleanly with the theoretical descriptions in *Heath, Ch. 6.6*.
 
-# End of README.md
+
