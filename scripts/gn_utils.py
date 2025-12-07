@@ -1,6 +1,6 @@
-"""Shared utilities for Gauss–Newton experiments on damped oscillation model.
+"""Shared utilities for Gauss-Newton experiments on damped oscillation model.
 
-Implements the forward model, analytic Jacobian, Gauss–Newton, and
+Implements the forward model, analytic Jacobian, Gauss-Newton, and
 Levenberg–Marquardt style damping variant.
 """
 

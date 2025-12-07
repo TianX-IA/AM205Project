@@ -95,7 +95,7 @@ $$
 and the nonlinear least squares objective is
 
 $$
-\phi(\beta) = \tfrac12 \|r(\beta)\|^2.
+S(\beta) = \tfrac12 \|r(\beta)\|^2.
 $$
 
 Let $J(\beta)$ denote the Jacobian of $r(\beta)$.
