@@ -44,14 +44,6 @@ venv.bak/
 *.swo
 *~
 
-# Data files (usually too large for git)
-data/
-plots/
-*.csv
-*.png
-*.jpg
-*.jpeg
-
 # Matplotlib config
 .mplconfig/
 

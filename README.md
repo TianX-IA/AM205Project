@@ -4,6 +4,66 @@
 
 This project presents a **clean, focused, and computationally substantial** exploration of two classical nonlinear least squares algorithms:
 
+---
+
+## Project Structure
+
+```
+AM205Project/
+├── README.md
+├── report.md
+├── .gitignore
+└── scripts/
+    ├── gn_utils.py
+    ├── experiment_initialization.py
+    ├── experiment_conditioning.py
+    └── experiment_noise.py
+```
+
+**Note:** The `data/` and `plots/` directories are automatically created when running experiments. They are excluded from version control (see `.gitignore`).
+
+---
+
+## Quick Start
+
+### Requirements
+
+```bash
+pip install numpy pandas matplotlib
+```
+
+### Running Experiments
+
+Each experiment is self-contained and generates its own synthetic data. Run them individually:
+
+```bash
+# E1: Sensitivity to Initialization (GN vs LM)
+python scripts/experiment_initialization.py
+
+# E2: Ill-Conditioning (Normal Equations vs QR vs LM)
+python scripts/experiment_conditioning.py
+
+# E3: Sensitivity to Measurement Noise
+python scripts/experiment_noise.py
+```
+
+**Output:**
+- Results are saved to `data/` directory (CSV files)
+- Plots are saved to `plots/` directory (PNG files)
+
+### Running All Experiments
+
+```bash
+# Run all three experiments sequentially
+python scripts/experiment_initialization.py && \
+python scripts/experiment_conditioning.py && \
+python scripts/experiment_noise.py
+```
+
+---
+
+This project presents a **clean, focused, and computationally substantial** exploration of two classical nonlinear least squares algorithms:
+
 - **Gauss–Newton (GN)**  
 - **Levenberg–Marquardt (LM)**  
 
@@ -22,23 +82,23 @@ These experiments align directly with *Heath, Scientific Computing, Section 6.6*
 We study parameter estimation for the nonlinear model
 
 $$
-f(t;\theta) = \lambda e^{-\alpha t} \sin(\omega t), \quad
-\theta = (\lambda, \alpha, \omega).
+f(t;\beta) = A e^{-\lambda t} \cos(\omega t + \phi) + c, \quad
+\beta = (A, \lambda, \omega, \phi, c).
 $$
 
 Given data $y_i$, residuals are
 
 $$
-r_i(\theta) = y_i - f(t_i;\theta),
+r_i(\beta) = y_i - f(t_i;\beta),
 $$
 
 and the nonlinear least squares objective is
 
 $$
-\phi(\theta) = \tfrac12 \|r(\theta)\|^2.
+\phi(\beta) = \tfrac12 \|r(\beta)\|^2.
 $$
 
-Let $J(\theta)$ denote the Jacobian of $r(\theta)$.
+Let $J(\beta)$ denote the Jacobian of $r(\beta)$.
 
 ---
 
@@ -182,20 +242,5 @@ Quantify how noise affects parameter recovery.
 ### Overall  
 **LM offers greater robustness at modest cost**, while GN is fast only under ideal conditions.  
 These findings align cleanly with the theoretical descriptions in *Heath, Ch. 6.6*.
-
----
-
-# Suggested Directory Structure
-
-```
-.
-├── data/
-├── scripts/
-│   ├── experiment_init.py
-│   ├── experiment_noise.py
-│   ├── experiment_conditioning.py
-│   └── utils_solvers.py
-└── plots/
-```
 
 # End of README.md

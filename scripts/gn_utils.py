@@ -1,23 +1,18 @@
-"""
-Shared utilities for Gauss–Newton experiments on a damped oscillation model.
+"""Shared utilities for Gauss–Newton experiments on damped oscillation model.
 
-Implements the forward model, analytic Jacobian, Gauss–Newton, and a
-Levenberg–Marquardt style damping variant. Designed for small experiments,
-not as a production optimizer.
+Implements the forward model, analytic Jacobian, Gauss–Newton, and
+Levenberg–Marquardt style damping variant.
 """
 
 from __future__ import annotations
-
 from dataclasses import dataclass
-from typing import Callable, Dict, List, Tuple
-
+from typing import List, Dict, Tuple
 import numpy as np
 
 
 def damped_oscillation(t: np.ndarray, beta: np.ndarray) -> np.ndarray:
-    """
-    Damped cosine model: f(t; beta) = A * exp(-lambda * t) * cos(omega * t + phi) + c.
-
+    """Damped cosine model: f(t; beta) = A * exp(-lambda * t) * cos(omega * t + phi) + c.
+    
     Parameters
     ----------
     t : np.ndarray
@@ -31,42 +26,39 @@ def damped_oscillation(t: np.ndarray, beta: np.ndarray) -> np.ndarray:
 
 
 def residuals(beta: np.ndarray, t: np.ndarray, y: np.ndarray) -> np.ndarray:
-    """Residuals r = f(beta) - y for least squares."""
-    return damped_oscillation(t, beta) - y
+    """Residuals r = y - f(beta) for least squares."""
+    return y - damped_oscillation(t, beta)
 
 
 def jacobian(beta: np.ndarray, t: np.ndarray, y: np.ndarray | None = None) -> np.ndarray:
-    """
-    Analytic Jacobian of residuals. Shape (m, 5).
-
-    dr/dA = exp(-lam t) cos(...)
-    dr/dlam = -A t exp(-lam t) cos(...)
-    dr/domega = -A t exp(-lam t) sin(...)
-    dr/dphi = -A exp(-lam t) sin(...)
-    dr/dc = 1
+    """Analytic Jacobian of residuals r = y - f(beta). Shape (m, 5).
+    
+    Since dr/dbeta = -df/dbeta, we return -df/dbeta.
+    Columns: [dA, dlam, domega, dphi, dc]
     """
     A, lam, omega, phi, _ = beta
     exp_term = np.exp(-lam * t)
     cos_term = np.cos(omega * t + phi)
     sin_term = np.sin(omega * t + phi)
-
-    dA = exp_term * cos_term
-    dlam = -A * t * exp_term * cos_term
-    domega = -A * t * exp_term * sin_term
-    dphi = -A * exp_term * sin_term
-    dc = np.ones_like(t)
-    return np.column_stack((dA, dlam, domega, dphi, dc))
+    return np.column_stack((
+        -exp_term * cos_term,                    # dr/dA = -df/dA
+        A * t * exp_term * cos_term,             # dr/dlam = -df/dlam
+        A * t * exp_term * sin_term,             # dr/domega = -df/domega
+        A * exp_term * sin_term,                 # dr/dphi = -df/dphi
+        -np.ones_like(t)                         # dr/dc = -df/dc
+    ))
 
 
 @dataclass
 class GNConfig:
+    """Configuration for Gauss–Newton algorithm."""
     max_iter: int = 80
     step_tol: float = 1e-8
     grad_tol: float = 1e-6
-    damping: bool = False
-    mu_init: float = 1e-3
-    mu_factor: float = 10.0
-    use_normal_eq: bool = False
+    damping: bool = False          # Use Levenberg–Marquardt damping
+    mu_init: float = 1e-3          # Initial damping parameter
+    mu_factor: float = 10.0        # Factor for updating mu
+    use_normal_eq: bool = False    # Use normal equations instead of QR
 
 
 def _qr_step(J: np.ndarray, r: np.ndarray) -> np.ndarray:
@@ -75,45 +67,40 @@ def _qr_step(J: np.ndarray, r: np.ndarray) -> np.ndarray:
     try:
         return np.linalg.solve(R, -Q.T @ r)
     except np.linalg.LinAlgError:
-        # Fall back to least-squares if R is singular.
+        # Fall back to least-squares if R is singular
         return np.linalg.lstsq(J, -r, rcond=None)[0]
 
 
 def _normal_eq_step(J: np.ndarray, r: np.ndarray) -> np.ndarray:
-    """Solve normal equations; used to expose conditioning effects."""
-    H = J.T @ J
+    """Solve normal equations (J^T J) delta = -J^T r."""
     try:
-        return np.linalg.solve(H, -J.T @ r)
+        return np.linalg.solve(J.T @ J, -J.T @ r)
     except np.linalg.LinAlgError:
         return np.linalg.lstsq(J, -r, rcond=None)[0]
 
 
 def _sanitize_beta(beta: np.ndarray) -> np.ndarray:
-    """Keep parameters in a numerically reasonable range to avoid overflow."""
+    """Keep parameters in numerically reasonable range to avoid overflow."""
     beta = beta.copy()
-    beta[0] = float(np.clip(beta[0], -5.0, 5.0))  # amplitude can be signed
-    beta[1] = float(np.clip(beta[1], 0.0, 2.0))  # damping should stay non-negative
-    beta[2] = float(np.clip(beta[2], 0.05, 8.0))  # frequency
-    beta[3] = float(np.mod(beta[3], 2 * np.pi))  # wrap phase
-    beta[4] = float(np.clip(beta[4], -5.0, 5.0))  # offset
+    beta[0] = float(np.clip(beta[0], -5.0, 5.0))      # amplitude
+    beta[1] = float(np.clip(beta[1], 0.0, 2.0))      # damping (non-negative)
+    beta[2] = float(np.clip(beta[2], 0.05, 8.0))     # frequency
+    beta[3] = float(np.mod(beta[3], 2 * np.pi))      # phase (wrap)
+    beta[4] = float(np.clip(beta[4], -5.0, 5.0))     # offset
     return beta
 
 
 def gauss_newton(
-    beta0: np.ndarray,
-    t: np.ndarray,
-    y: np.ndarray,
-    config: GNConfig | None = None,
+    beta0: np.ndarray, t: np.ndarray, y: np.ndarray, config: GNConfig | None = None
 ) -> Tuple[np.ndarray, List[Dict[str, float]]]:
-    """
-    Basic Gauss–Newton iteration with optional damping (LM flavor) and QR solve.
-
+    """Basic Gauss–Newton iteration with optional damping (LM flavor) and QR solve.
+    
     Returns
     -------
     beta : np.ndarray
         Final parameter estimate.
     history : list of dict
-        Iteration diagnostics with keys: iter, sse, grad_norm, cond_J, cond_JtJ, mu.
+        Iteration diagnostics with keys: iter, sse, grad_norm, cond_J, cond_JtJ, cond_JtJ_mu, mu.
     """
     if config is None:
         config = GNConfig()
@@ -122,42 +109,45 @@ def gauss_newton(
     mu = config.mu_init
 
     for k in range(config.max_iter):
+        # Compute residuals, Jacobian, and gradient
         r = residuals(beta, t, y)
         J = jacobian(beta, t, y)
         grad = J.T @ r
         sse = 0.5 * float(r.T @ r)
+        
+        # Compute condition numbers
         try:
             cond_J = float(np.linalg.cond(J))
             cond_JtJ = float(np.linalg.cond(J.T @ J))
+            cond_JtJ_mu = float(np.linalg.cond(J.T @ J + mu * np.eye(J.shape[1]))) if config.damping else cond_JtJ
         except np.linalg.LinAlgError:
-            cond_J = float("inf")
-            cond_JtJ = float("inf")
-        history.append(
-            {
-                "iter": k,
-                "sse": sse,
-                "grad_norm": float(np.linalg.norm(grad)),
-                "cond_J": cond_J,
-                "cond_JtJ": cond_JtJ,
-                "mu": mu if config.damping else 0.0,
-            }
-        )
+            cond_J = cond_JtJ = cond_JtJ_mu = float("inf")
+        
+        history.append({
+            "iter": k, "sse": sse, "grad_norm": float(np.linalg.norm(grad)),
+            "cond_J": cond_J, "cond_JtJ": cond_JtJ, "cond_JtJ_mu": cond_JtJ_mu,
+            "mu": mu if config.damping else 0.0,
+        })
+        
+        # Check convergence
         if np.linalg.norm(grad) < config.grad_tol:
             break
 
         if config.damping:
-            # Levenberg–Marquardt style damping with simple gain update.
+            # Levenberg–Marquardt: (J^T J + mu*I) delta = -J^T r
             A = J.T @ J + mu * np.eye(J.shape[1])
             step = np.linalg.solve(A, -grad)
             trial_beta = _sanitize_beta(beta + step)
-            trial_r = residuals(trial_beta, t, y)
-            trial_sse = 0.5 * float(trial_r.T @ trial_r)
+            trial_sse = 0.5 * float(residuals(trial_beta, t, y).T @ residuals(trial_beta, t, y))
+            
+            # Update damping parameter based on step quality
             if trial_sse < sse:
                 beta = trial_beta
-                mu = max(mu / config.mu_factor, 1e-12)
+                mu = max(mu / config.mu_factor, 1e-12)  # Decrease mu (approach GN)
             else:
-                mu = mu * config.mu_factor
+                mu = mu * config.mu_factor  # Increase mu (approach gradient descent)
         else:
+            # Standard Gauss–Newton step
             step = _normal_eq_step(J, r) if config.use_normal_eq else _qr_step(J, r)
             if np.linalg.norm(step) <= config.step_tol * (np.linalg.norm(beta) + config.step_tol):
                 break
