@@ -15,6 +15,17 @@ from gn_utils import GNConfig, gauss_newton, relative_error, damped_oscillation
 
 
 def main() -> None:
+    # Set unified font style for all plots
+    plt.rcParams.update({
+        'font.size': 11,
+        'axes.titlesize': 12,
+        'axes.labelsize': 11,
+        'xtick.labelsize': 10,
+        'ytick.labelsize': 10,
+        'legend.fontsize': 10,
+        'figure.titlesize': 12,
+    })
+    
     # Generate clean signal as baseline
     beta_true = np.array([1.3, 0.15, 2.0, 0.5, 0.1])
     t = np.linspace(0.0, 10.0, 200)
