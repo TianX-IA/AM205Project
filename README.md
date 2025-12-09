@@ -160,7 +160,7 @@ For each run record:
 - Matches Heath’s statement:  
   *“GN may fail unless the initial guess is sufficiently close.”*
 
-### Suggested Plots  
+### Plots  
 - Convergence rate bar chart  
 - Scatter: initialization → final SSE  
 - LM vs GN convergence trajectories (for selected runs)
@@ -193,10 +193,9 @@ Compare:
 - LM dramatically improves stability by shifting the spectrum and regularizing the system  
 - Confirms *Heath 6.6.2* on LM’s role in “ill-conditioned or rank-deficient least squares problems”
 
-### Suggested Plots  
+### Plots  
 - cond(J), cond(J^T J), cond(J^T J+μI) vs iteration  
 - SSE vs iteration  
-- Comparison of step quality
 
 ---
 
@@ -220,7 +219,7 @@ Quantify how noise affects parameter recovery.
 - SSE increases significantly with $\sigma$  
 - Noise affects both GN and LM similarly; this experiment provides completeness and insight into data sensitivity
 
-### Suggested Plots  
+### Plots  
 - Parameter error vs $\sigma$  
 - SSE vs $\sigma$  
 
