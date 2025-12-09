@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 from gn_utils import GNConfig, gauss_newton, relative_error, damped_oscillation
-
+from matplotlib.colors import LogNorm
 
 def sample_initializations(beta_true: np.ndarray, n_samples: int, rng: np.random.Generator) -> np.ndarray:
     """Draw random initial guesses around the truth with controlled perturbations."""
@@ -71,6 +71,7 @@ def main() -> None:
     res_df = pd.DataFrame(results)
     Path("data").mkdir(exist_ok=True)
     res_df.to_csv("data/init_sensitivity_results.csv", index=False)
+    
 
     plots_dir = Path("plots")
     plots_dir.mkdir(exist_ok=True)
@@ -91,13 +92,18 @@ def main() -> None:
     plt.close()
 
     # Plot 2: Basins of attraction comparison
+    vmin = res_df[["gn_sse", "lm_sse"]].min().min()
     vmax = res_df[["gn_sse", "lm_sse"]].max().max()
+    # Ensure vmin is positive for log scale
+    vmin = max(vmin, 1e-10)
+    
     plt.figure(figsize=(12, 5))
     for idx, (method, col) in enumerate([("GN", "gn_sse"), ("LM", "lm_sse")], 1):
         plt.subplot(1, 2, idx)
         sc = plt.scatter(res_df["beta0_omega"], res_df["beta0_lambda"], c=res_df[col],
-                        cmap="viridis", s=50, alpha=0.9, edgecolors="k", vmin=0, vmax=vmax)
-        plt.colorbar(sc, label="Final SSE")
+                        cmap="viridis", s=80, alpha=0.9, edgecolors="k", 
+                        norm=LogNorm(vmin=vmin, vmax=vmax))
+        plt.colorbar(sc, label="Final SSE (log scale)")
         plt.scatter([beta_true[2]], [beta_true[1]], color="red", marker="x", s=80, label="truth")
         plt.xlabel(r"$\omega_0$ (initial)")
         plt.ylabel(r"$\lambda_0$ (initial)")
