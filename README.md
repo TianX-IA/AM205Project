@@ -241,6 +241,5 @@ Quantify how noise affects parameter recovery.
 
 ### Overall  
 LM offers greater robustness at modest cost, while GN is fast only under ideal conditions.  
-These findings align cleanly with the theoretical descriptions in *Heath, Ch. 6.6*.
 
 
