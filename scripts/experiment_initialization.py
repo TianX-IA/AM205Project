@@ -36,6 +36,17 @@ def create_bad_initializations(beta_true: np.ndarray) -> list[np.ndarray]:
 
 
 def main() -> None:
+    # Set unified font style for all plots
+    plt.rcParams.update({
+        'font.size': 11,
+        'axes.titlesize': 12,
+        'axes.labelsize': 11,
+        'xtick.labelsize': 10,
+        'ytick.labelsize': 10,
+        'legend.fontsize': 10,
+        'figure.titlesize': 12,
+    })
+    
     # Generate synthetic data with moderate noise (σ = 0.05)
     beta_true = np.array([1.3, 0.15, 2.0, 0.5, 0.1], dtype=float)
     rng = np.random.default_rng(42)
@@ -145,13 +156,12 @@ def main() -> None:
                 linewidth=3, markersize=10, alpha=1.0, zorder=2,
                 markerfacecolor="#1b9e77", markeredgecolor="white", markeredgewidth=1.5)
         plt.yscale("log")
-        plt.xlabel("Iteration", fontsize=13)
-        plt.ylabel("SSE", fontsize=13)
-        plt.title("Convergence trajectories: GN vs LM\n(Example: GN fails, LM succeeds)", 
-                 fontsize=13, fontweight="bold")
+        plt.xlabel("Iteration")
+        plt.ylabel("SSE")
+        plt.title("Convergence trajectories: GN vs LM\n(Example: GN fails, LM succeeds)")
         plt.ylim(y_min, y_max)
         plt.xlim(-0.5, max(max(gn_iters), max(lm_iters)) + 0.5)
-        plt.legend(fontsize=12, loc="best", framealpha=0.9)
+        plt.legend(loc="best", framealpha=0.9)
         plt.grid(True, alpha=0.4, which="both", linestyle="--")
         plt.tight_layout()
         plt.savefig(plots_dir / "init_trajectories.png", dpi=200, bbox_inches="tight")

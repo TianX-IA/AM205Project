@@ -16,6 +16,17 @@ from gn_utils import GNConfig, gauss_newton, relative_error, damped_oscillation
 
 
 def main() -> None:
+    # Set unified font style for all plots
+    plt.rcParams.update({
+        'font.size': 11,
+        'axes.titlesize': 12,
+        'axes.labelsize': 11,
+        'xtick.labelsize': 10,
+        'ytick.labelsize': 10,
+        'legend.fontsize': 10,
+        'figure.titlesize': 12,
+    })
+
     # Generate synthetic data with long time horizon (t ∈ [0, 25]) to induce ill-conditioning
     rng = np.random.default_rng(123)
     beta_true = np.array([0.8, 0.08, 1.6, 0.9, 0.05])
