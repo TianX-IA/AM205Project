@@ -68,7 +68,6 @@ def main() -> None:
             "lm_param_error": relative_error(beta_lm, beta_true), "lm_grad_norm": final_lm["grad_norm"],
         })
 
-    # Save results
     res_df = pd.DataFrame(results)
     Path("data").mkdir(exist_ok=True)
     res_df.to_csv("data/init_sensitivity_results.csv", index=False)
@@ -125,11 +124,9 @@ def main() -> None:
         lm_iters = [h["iter"] for h in hist_lm_sel]
         lm_sse = [h["sse"] for h in hist_lm_sel]
         
-        # Filter out inf/nan values for visualization
         gn_sse_clean = [s if np.isfinite(s) else 1e10 for s in gn_sse]
         lm_sse_clean = [s if np.isfinite(s) else 1e10 for s in lm_sse]
         
-        # Set reasonable y-axis limits
         all_sse = gn_sse_clean + lm_sse_clean
         y_min = max(1e-6, min(all_sse) * 0.1)
         y_max = min(1e10, max(all_sse) * 10) if max(all_sse) < 1e9 else 1e10

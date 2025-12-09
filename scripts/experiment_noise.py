@@ -2,8 +2,8 @@
 
 Quantify how noise affects parameter recovery.
 - Fixed initialization
-- Noise levels σ ∈ {0.01, 0.05, 0.10, 0.20}
-- For each σ, run 20 trials and compute median parameter error and median SSE
+- Noise levels $\sigma$ ∈ {0.01, 0.05, 0.10, 0.20}
+- For each $\sigma$, run 20 trials and compute median parameter error and median SSE
 """
 
 from __future__ import annotations
@@ -26,7 +26,6 @@ def main() -> None:
     base_start = beta_true * np.array([0.9, 1.1, 0.8, 1.0, 1.0])
     base_start[3] += 0.2
 
-    # Run trials for each noise level
     records = []
     for sigma in [0.01, 0.05, 0.1, 0.2]:
         for trial in range(20):
@@ -39,12 +38,11 @@ def main() -> None:
                 "grad_norm": final["grad_norm"],
             })
 
-    # Save results
     out_df = pd.DataFrame(records)
     Path("data").mkdir(exist_ok=True)
     out_df.to_csv("data/noise_sensitivity_results.csv", index=False)
 
-    # Compute summary statistics (median and IQR)
+    # Statistics (median and IQR)
     summary = out_df.groupby("sigma").agg(
         param_error_median=("param_error", "median"),
         param_error_iqr=("param_error", lambda x: np.percentile(x, 75) - np.percentile(x, 25)),
@@ -60,9 +58,9 @@ def main() -> None:
     plt.errorbar(summary["sigma"], summary["param_error_median"],
                  yerr=0.5 * summary["param_error_iqr"], fmt="o-", capsize=4,
                  color="#d95f02", ecolor="#1b9e77")
-    plt.xlabel("Noise level σ")
+    plt.xlabel("Noise level $\sigma$")
     plt.ylabel("Relative parameter error")
-    plt.title("Noise sensitivity (parameter error vs σ)")
+    plt.title("Noise sensitivity (parameter error vs $\sigma$)")
     plt.tight_layout()
     plt.savefig(plots_dir / "noise_param_error.png", dpi=200)
     plt.close()
@@ -72,9 +70,9 @@ def main() -> None:
     plt.errorbar(summary["sigma"], summary["sse_median"],
                  yerr=0.5 * summary["sse_iqr"], fmt="o-", capsize=4,
                  color="#4daf4a", ecolor="#377eb8")
-    plt.xlabel("Noise level σ")
+    plt.xlabel("Noise level $\sigma$")
     plt.ylabel("Final SSE")
-    plt.title("Noise sensitivity (final SSE vs σ)")
+    plt.title("Noise sensitivity (final SSE vs $\sigma$)")
     plt.tight_layout()
     plt.savefig(plots_dir / "noise_sse.png", dpi=200)
     plt.close()

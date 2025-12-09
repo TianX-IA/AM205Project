@@ -1,7 +1,7 @@
 """Shared utilities for Gauss-Newton experiments on damped oscillation model.
 
 Implements the forward model, analytic Jacobian, Gauss-Newton, and
-Levenberg–Marquardt style damping variant.
+Levenberg-Marquardt style damping variant.
 """
 
 from __future__ import annotations
@@ -51,7 +51,7 @@ def jacobian(beta: np.ndarray, t: np.ndarray, y: np.ndarray | None = None) -> np
 
 @dataclass
 class GNConfig:
-    """Configuration for Gauss–Newton algorithm."""
+    """Configuration for Gauss-Newton algorithm."""
     max_iter: int = 80
     step_tol: float = 1e-8
     grad_tol: float = 1e-6
@@ -93,7 +93,7 @@ def _sanitize_beta(beta: np.ndarray) -> np.ndarray:
 def gauss_newton(
     beta0: np.ndarray, t: np.ndarray, y: np.ndarray, config: GNConfig | None = None
 ) -> Tuple[np.ndarray, List[Dict[str, float]]]:
-    """Basic Gauss–Newton iteration with optional damping (LM flavor) and QR solve.
+    """Basic Gauss-Newton iteration with optional damping (LM flavor) and QR solve.
     
     Returns
     -------
